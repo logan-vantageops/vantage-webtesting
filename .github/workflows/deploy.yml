@@ -1,0 +1,61 @@
+name: Build & Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: vantage/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: vantage/pnpm-lock.yaml
+
+      - name: Install Vantage dependencies
+        working-directory: vantage
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Vantage landing page
+        working-directory: vantage
+        run: pnpm exec vite build
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/buckeye
+          mkdir -p _site/vantage
+          cp buckeye/index.html _site/buckeye/index.html
+          cp -r vantage/dist/public/. _site/vantage/
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
