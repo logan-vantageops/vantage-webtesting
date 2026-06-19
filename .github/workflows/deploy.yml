@@ -48,8 +48,10 @@ jobs:
         run: |
           mkdir -p _site/buckeye
           mkdir -p _site/vantage
+          mkdir -p _site/home-services
           cp buckeye/index.html _site/buckeye/index.html
           cp -r vantage/dist/public/. _site/vantage/
+          cp home-services/index.html _site/home-services/index.html
 
       - uses: actions/configure-pages@v4
 
